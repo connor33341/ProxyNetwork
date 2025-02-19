@@ -1,6 +1,7 @@
 import logging
 import os
 import uuid
+import re
 
 logger = logging.getLogger(__name__)
 class ConfigManager():
@@ -14,6 +15,7 @@ class ConfigManager():
 
     def LoadConfig(self):
         logger.info(f"ConfigReading: {self.ID}")
+        self.ConfigData = {}
         if self.FileExists():
             logger.info(f"ConfigFile Located: {self.ID}")
             try:
@@ -29,11 +31,19 @@ class ConfigManager():
                         #print(KV)
                         Key = KV[0]
                         Value = KV[1]
+                        if self.RemoveSpaces:
+                            Key = self.FormatString(Key)
+                            Value = self.FormatString(Value)
                         logger.info(f"Reading Line: {i} K: {Key} V: {Value}")
+                        self.ConfigData[Key] = Value
                     
             except Exception as Error:
-                logger.warn(f"ConfigFile IOError: {Error}")
+                logger.warn(f"LoadConfig Error: {Error}")
         else:
             logger.warn(f"ConfigFile Missing: {self.ID}")
+        return self.ConfigData
     def FileExists(self) -> bool:
         return os.path.isfile(self.ConfigFile)
+    def FormatString(self,UnformattedString) -> str:
+        FormattedString = re.sub(r'[^a-zA-Z.:/]|\n|\r','',UnformattedString)
+        return FormattedString
